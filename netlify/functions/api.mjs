@@ -51,6 +51,8 @@ export default async (req, context) => {
           payment_month: config.PAYMENT_MONTH,
           refresh_interval_minutes: parseInt(process.env.CACHE_TTL_MINUTES || '4', 10),
           leads: data.leadRows?.length,
+          tokens: data.tokenRows?.length,
+          full_payments: data.fullRows?.length,
         });
       } catch (e) {
         return json(503, {

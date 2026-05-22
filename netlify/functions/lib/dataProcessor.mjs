@@ -76,14 +76,27 @@ function filterGm(rows) {
   return rows.filter((r) => cleanStr(r[gmCol]) === config.GM_NAME);
 }
 
+function paymentMonthColumn(row) {
+  // Two "Month" cols in sheet: 1st = label (April-26), 2nd = number (5) — Papa Parse names it Month_1
+  if (row && 'Month_1' in row) return 'Month_1';
+  if (row && 'Month.1' in row) return 'Month.1';
+  if (row && 'Month' in row) return 'Month';
+  return null;
+}
+
+function rowPaymentMonth(record, monthCol) {
+  const raw = record[monthCol];
+  if (raw == null || raw === '') return null;
+  const n = parseFloat(String(raw).trim().replace(/,/g, ''));
+  if (!Number.isNaN(n) && Number.isFinite(n)) return Math.round(n);
+  return null;
+}
+
 function filterPaymentMonth(rows) {
   if (!rows.length) return [];
-  const monthCol = 'Month.1' in rows[0] ? 'Month.1' : 'Month' in rows[0] ? 'Month' : null;
+  const monthCol = paymentMonthColumn(rows[0]);
   if (!monthCol) return [];
-  return rows.filter((r) => {
-    const m = parseInt(String(r[monthCol]).trim(), 10);
-    return m === config.PAYMENT_MONTH;
-  });
+  return rows.filter((r) => rowPaymentMonth(r, monthCol) === config.PAYMENT_MONTH);
 }
 
 function normalizeFinalStage(value) {
