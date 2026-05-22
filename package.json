@@ -1,0 +1,12 @@
+{
+  "name": "futurense-gm-dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "python server.py"
+  },
+  "dependencies": {
+    "papaparse": "^5.4.1"
+  }
+}

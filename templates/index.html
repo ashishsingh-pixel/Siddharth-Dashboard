@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futurense · GM Siddhartha · May 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-name">Futurense</div>
+    <div class="logo-sub">GM · Siddhartha</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Views</div>
+    <div class="nav-item active" onclick="setView('revenue',this)"><span style="font-size:15px">₹</span> Revenue</div>
+    <div class="nav-item" onclick="setView('productivity',this)"><span style="font-size:15px">📞</span> Productivity</div>
+    <div class="nav-item" onclick="setView('leads',this)"><span style="font-size:15px">🎯</span> Lead Report</div>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="nav-section">
+    <div class="nav-label">Manager Filter</div>
+    <div class="nav-item active" id="tl-ALL" onclick="filterTL('ALL',this)"><div class="nav-dot" style="background:#6b7280"></div> All Managers</div>
+    <div class="nav-item" id="tl-Adnan" onclick="filterTL('Adnan',this)"><div class="nav-dot" style="background:#2563eb"></div> Adnan</div>
+    <div class="nav-item" id="tl-Sudhanshu" onclick="filterTL('Sudhanshu',this)"><div class="nav-dot" style="background:#db2777"></div> Sudhanshu</div>
+    <div class="nav-item" id="tl-Shailendra" onclick="filterTL('Shailendra',this)"><div class="nav-dot" style="background:#0d9488"></div> Shailendra</div>
+    <div class="nav-item" id="tl-Bhavya" onclick="filterTL('Bhavya',this)"><div class="nav-dot" style="background:#7c3aed"></div> Bhavya</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="page-title">Revenue Report</div>
+      <div class="topbar-meta">GM: Siddhartha &nbsp;·&nbsp; May 2026 &nbsp;·&nbsp; <span id="live-status">Connecting...</span></div>
+    </div>
+    <div class="filter-bar">
+      <select class="filter-select" id="bda-filter" onchange="filterBDA(this.value)">
+        <option value="ALL">All BDAs</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- DATE RANGE BAR (shown for productivity + leads) -->
+  <div class="date-range-bar" id="date-range-bar">
+    <span class="date-label">Date range:</span>
+    <input type="date" class="date-input" id="date-from" value="2026-05-01" min="2026-05-01" max="2026-05-31" onchange="onDateChange()">
+    <span style="font-size:12px;color:var(--muted)">to</span>
+    <input type="date" class="date-input" id="date-to" value="2026-05-31" min="2026-05-01" max="2026-05-31" onchange="onDateChange()">
+    <div class="filter-sep"></div>
+    <div class="date-presets">
+      <button class="date-preset" onclick="setPreset('1w',this)">Last 7d</button>
+      <button class="date-preset" onclick="setPreset('2w',this)">Last 14d</button>
+      <button class="date-preset active" onclick="setPreset('all',this)">Full Month</button>
+    </div>
+    <span class="date-range-info" id="date-range-info"></span>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ REVENUE VIEW ══ -->
+    <div id="view-revenue">
+      <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);max-width:480px">
+        <div class="kpi-card"><div class="kpi-label">Full Enrollments</div><div class="kpi-value" id="r-enr">—</div><div class="kpi-sub" id="r-enr-sub">GM Siddhartha · all TLs · May</div></div>
+        <div class="kpi-card"><div class="kpi-label">Token Bookings</div><div class="kpi-value" id="r-tok">—</div><div class="kpi-sub" id="r-tok-sub">GM Siddhartha · all TLs · May</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-title">Program-wise Enrollments</div>
+          <div class="card-sub" id="course-chart-sub">Full &amp; token bookings by program · May 2026</div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Full Enrollments</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Token Bookings</div>
+          </div>
+          <div class="chart-wrap" style="height:200px"><canvas id="courseChart" role="img" aria-label="Program enrollments chart">Program chart</canvas></div>
+        </div>
+        <div class="card" id="mgr-rev-card">
+          <div class="card-title">Revenue by Manager</div>
+          <div class="card-sub">By TL column · GM Siddhartha · payments without TL shown as Unassigned</div>
+          <div id="mgr-rev-bars"></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="card-title">BDA-wise Revenue Breakdown</div><div style="font-size:12px;color:var(--muted)" id="bda-rev-count">BDAs with at least one token or full payment</div></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>BDA</th><th>Manager</th><th class="num">Full Enr.</th><th class="num">Tokens</th></tr></thead>
+          <tbody id="bda-rev-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ PRODUCTIVITY VIEW ══ -->
+    <div id="view-productivity" style="display:none">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Total Calls</div><div class="kpi-value" id="p-calls">—</div><div class="kpi-sub" id="p-calls-sub">All BDAs</div></div>
+        <div class="kpi-card"><div class="kpi-label">Connected</div><div class="kpi-value" id="p-conn">—</div><div class="kpi-sub" id="p-conn-pct">connect rate</div></div>
+        <div class="kpi-card"><div class="kpi-label">Unique Leads</div><div class="kpi-value" id="p-leads">—</div><div class="kpi-sub">Touched this period</div></div>
+        <div class="kpi-card"><div class="kpi-label">Talk Time</div><div class="kpi-value" id="p-tt">—</div><div class="kpi-sub">Hours of calls</div></div>
+        <div class="kpi-card"><div class="kpi-label">Active BDAs</div><div class="kpi-value" id="p-bdas">—</div><div class="kpi-sub">With call activity</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-title">Manager-wise Call Performance</div>
+          <div class="card-sub" id="p-chart-sub">Total calls, connected &amp; unique leads</div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Total Calls</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Connected</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>Unique Leads</div>
+          </div>
+          <div class="chart-wrap" style="height:220px"><canvas id="tlCallChart" role="img" aria-label="Manager call performance">Manager calls chart</canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Connect Rate by Manager</div>
+          <div class="card-sub">% of calls that connected</div>
+          <div id="conn-rate-bars"></div>
+        </div>
+      </div>
+      <div class="charts-row-full">
+        <div class="card card-chart-featured">
+          <div class="card-title">Daily Call Volume</div>
+          <div class="card-sub" id="daily-call-sub">Calls &amp; connections per day</div>
+          <div class="daily-call-stats">
+            <div class="daily-stat">
+              <div class="daily-stat-value" id="daily-total-calls">—</div>
+              <div class="daily-stat-label">Total Calls (period)</div>
+            </div>
+            <div class="daily-stat">
+              <div class="daily-stat-value connected" id="daily-total-conn">—</div>
+              <div class="daily-stat-label">Connected (period)</div>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Total Calls</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Connected</div>
+          </div>
+          <div class="chart-wrap chart-wrap-tall"><canvas id="dailyCallChart" role="img" aria-label="Daily call volume">Daily calls</canvas></div>
+        </div>
+      </div>
+      <div class="charts-row-single">
+        <div class="card">
+          <div class="card-title">Call Duration Distribution</div>
+          <div class="card-sub">Breakdown by duration bucket</div>
+          <div class="chart-wrap" style="height:220px;min-height:220px"><canvas id="durChart" role="img" aria-label="Call duration distribution">Duration chart</canvas></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="card-title">BDA-wise Productivity</div><div style="font-size:12px;color:var(--muted)" id="bda-prod-count"></div></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>BDA</th><th>Manager</th><th class="num">Calls</th><th class="num">Connected</th><th class="num">Conn%</th><th class="num">Unique Leads</th><th class="num">CPL</th><th class="num">Talk Time (min)</th><th class="num">Days Active</th></tr></thead>
+          <tbody id="bda-prod-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ LEADS VIEW ══ -->
+    <div id="view-leads" style="display:none">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Total Leads</div><div class="kpi-value" id="l-total">—</div><div class="kpi-sub">All stages</div></div>
+        <div class="kpi-card"><div class="kpi-label">Interested</div><div class="kpi-value" style="color:var(--green)" id="l-warm">—</div><div class="kpi-sub">Final Stage · high-intent</div></div>
+        <div class="kpi-card"><div class="kpi-label">Follow-up Reqd</div><div class="kpi-value" style="color:var(--blue)" id="l-fup">—</div><div class="kpi-sub">Call back / follow up</div></div>
+        <div class="kpi-card"><div class="kpi-label">Not Connected</div><div class="kpi-value" style="color:var(--amber)" id="l-nc">—</div><div class="kpi-sub">Biggest bucket</div></div>
+        <div class="kpi-card"><div class="kpi-label">Invalid / Lost</div><div class="kpi-value" style="color:var(--red)" id="l-inv">—</div><div class="kpi-sub">Invalid + Not Interested</div></div>
+      </div>
+      <div class="charts-row-full">
+        <div class="card">
+          <div class="card-title">Lead Stage Funnel</div>
+          <div class="card-sub" id="funnel-subtitle">By Final Stage · all managers</div>
+          <div id="lead-funnel"></div>
+        </div>
+      </div>
+      <div class="charts-row-full">
+        <div class="card card-chart-featured">
+          <div class="card-title">Daily Lead Inflow</div>
+          <div class="card-sub" id="daily-lead-sub">New leads created per day</div>
+          <div class="daily-call-stats">
+            <div class="daily-stat">
+              <div class="daily-stat-value" id="daily-lead-total">—</div>
+              <div class="daily-stat-label">Total leads (period)</div>
+            </div>
+            <div class="daily-stat">
+              <div class="daily-stat-value" style="font-size:28px;color:var(--muted)" id="daily-lead-avg">—</div>
+              <div class="daily-stat-label">Avg per day</div>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap-tall"><canvas id="dailyLeadChart" role="img" aria-label="Daily lead inflow">Daily leads chart</canvas></div>
+        </div>
+      </div>
+      <div class="charts-row-single">
+        <div class="card">
+          <div class="card-title">Lead Source Mix</div>
+          <div class="card-sub">By Subsource column</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="sourceChart" role="img" aria-label="Lead subsource breakdown">Source chart</canvas></div>
+        </div>
+      </div>
+      <div class="charts-row-full">
+        <div class="card card-chart-featured">
+          <div class="card-header-row">
+            <div>
+              <div class="card-title">Manager-wise Stage Breakdown</div>
+              <div class="card-sub" id="stage-chart-sub">Stacked by Final Stage · per manager</div>
+            </div>
+            <select class="filter-select" id="stage-mgr-filter" onchange="filterStageMgr(this.value)" aria-label="Filter manager for stage breakdown">
+              <option value="ALL">All Managers</option>
+              <option value="Adnan">Adnan</option>
+              <option value="Sudhanshu">Sudhanshu</option>
+              <option value="Shailendra">Shailendra</option>
+              <option value="Bhavya">Bhavya</option>
+            </select>
+          </div>
+          <div class="daily-call-stats" id="stage-chart-stats">
+            <div class="daily-stat">
+              <div class="daily-stat-value" id="stage-chart-total">—</div>
+              <div class="daily-stat-label">Total leads (chart)</div>
+            </div>
+            <div class="daily-stat">
+              <div class="daily-stat-value connected" id="stage-chart-visible">—</div>
+              <div class="daily-stat-label">Visible (stages on)</div>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap-stage"><canvas id="stageChart" role="img" aria-label="Manager lead stage stacked bar">Stage chart</canvas></div>
+          <div class="stage-filter-bar">
+            <button type="button" class="stage-filter-all active" id="stage-filter-all-btn" onclick="stageChartFilterAll()">All Stages</button>
+            <div class="stage-filter-chips" id="stage-chart-chips"></div>
+          </div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="card-title">BDA-wise Lead Stage Breakdown</div><div style="font-size:12px;color:var(--muted)" id="bda-lead-count"></div></div>
+        <div class="table-scroll bda-lead-scroll"><table class="bda-lead-table">
+          <thead id="bda-lead-thead"><tr><th class="col-freeze col-freeze-1">BDA</th><th class="col-freeze col-freeze-2">Manager</th><th class="col-freeze col-freeze-3 num">Total</th></tr></thead>
+          <tbody id="bda-lead-table"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<script src="/static/app.js"></script>
+</body>
+</html>

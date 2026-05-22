@@ -1,0 +1,22 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies & build
+node_modules/
+public/
+
+# Python local dev
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Local / tooling
+.netlify/
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
